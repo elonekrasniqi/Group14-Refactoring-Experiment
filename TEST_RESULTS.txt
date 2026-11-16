@@ -1,0 +1,9 @@
+Independent test runs (OpenJDK 21):
+=== baseline ===
+ALL PASSED: 7/7
+=== P1 ===
+ALL PASSED: 7/7
+=== P2 ===
+ALL PASSED: 7/7
+=== P3 ===
+ALL PASSED: 7/7
