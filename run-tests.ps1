@@ -26,10 +26,10 @@ foreach ($v in $versions) {
     New-Item -ItemType Directory -Force $build | Out-Null
 
     if ($v -eq 'baseline') {
-        $sourcePath = Join-Path $root 'src/baseline/OrderProcessor.java'
+        $sourcePath = Join-Path $root 'src/experiment-1-order-service/baseline/OrderProcessor.java'
         $source = [System.IO.File]::ReadAllText($sourcePath)
     } else {
-        $sourcePath = Join-Path $root "src/OrderProcessor$v/OrderProcessor$v.java"
+        $sourcePath = Join-Path $root "src/experiment-1-order-service/OrderProcessor$v/OrderProcessor$v.java"
         $source = [System.IO.File]::ReadAllText($sourcePath)
 
         $source = $source.Replace(
