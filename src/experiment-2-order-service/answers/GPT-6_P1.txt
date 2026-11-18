@@ -1,0 +1,307 @@
+The code contains several common Code Smells that can be improved using established refactoring techniques. The main issues are a Long Method, Duplicated Code, Magic Numbers, and poor separation of responsibilities.
+
+Let's identify each opportunity and then implement the refactored version.
+1. Refactoring opportunities
+1. Extract Method
+Long Method
+Where: buildInvoice()
+
+Problem: The method performs too many different tasks:
+- Formats the invoice header.
+- Calculates item prices.
+- Applies quantity discounts.
+- Calculates taxes.
+- Calculates customer discounts.
+- Calculates the final total.
+- Formats the invoice output.
+Refactoring: Extract smaller methods, each responsible for one operation.
+
+For example:
+- calculateLinePrice()
+- calculateTax()
+- calculateDiscount()
+- formatInvoiceHeader()
+This makes the code easier to understand, test, and maintain.
+2. Extract Method / Consolidate Duplicate Code
+Duplicated Code
+Where: buildInvoice() and buildShippingLabel()
+
+Both methods use:
+customer.trim().toUpperCase()
+
+
+Problem: The same formatting logic is repeated in multiple places.
+
+Refactoring: Extract it into a shared method:
+private String normalizeName(String name) {
+    return name.trim().toUpperCase();
+}
+
+
+Then call it from both methods.
+3. Replace Magic Numbers with Constants
+Magic Numbers
+Where: Throughout buildInvoice().
+
+The code contains unexplained values:
+Value	Meaning
+10	Minimum quantity for bulk discount
+0.05	5% bulk discount
+0.08	8% food tax
+0.18	18% standard tax
+0.10	10% GOLD discount
+0.05	5% SILVER discount
+0.0	0% BOOK tax
+
+Problem: It is difficult to understand what these numbers represent.
+
+Refactoring: Replace them with named constants.
+private static final int BULK_DISCOUNT_THRESHOLD = 10;
+private static final double BULK_DISCOUNT_RATE = 0.05;
+private static final double FOOD_TAX_RATE = 0.08;
+private static final double STANDARD_TAX_RATE = 0.18;
+
+
+This improves readability and makes future changes easier.
+4. Extract Method – Calculate Item Tax
+Where: The if/else block checking it.category.
+if (it.category.equals("FOOD")) {
+    tax += line * 0.08;
+} else if (it.category.equals("BOOK")) {
+    tax += line * 0.0;
+} else {
+    tax += line * 0.18;
+}
+
+
+Problem: Tax calculation is mixed with invoice processing.
+
+Refactoring: Extract it into a separate method:
+private double calculateTax(double line, String category) {
+    // Tax calculation
+}
+
+
+Now the invoice method doesn't need to know the details of tax calculation.
+5. Replace Conditional with Method
+Where: Customer tier discount calculation.
+if (tier.equals("GOLD")) {
+    discount = subtotal * 0.10;
+} else if (tier.equals("SILVER")) {
+    discount = subtotal * 0.05;
+}
+
+
+Problem: Business rules are directly embedded in the invoice method.
+
+Refactoring: Extract the logic into calculateDiscount().
+
+This separates customer discount rules from invoice generation.
+6. Use Enhanced For Loop
+Where: names() method.
+
+Original:
+for (Item it : items) r.add(it.name);
+
+
+This is already an enhanced for loop, but it can be simplified using Java Streams:
+return items.stream()
+        .map(it -> it.name)
+        .collect(Collectors.toList());
+
+
+This is optional. The original implementation is perfectly valid, and streams are not automatically better.
+
+2. Refactored code
+Here is one possible implementation that applies the refactorings while preserving the original business logic.
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class OrderService {
+
+    // Constants
+    private static final int BULK_DISCOUNT_THRESHOLD = 10;
+
+    private static final double BULK_DISCOUNT_RATE = 0.05;
+
+    private static final double FOOD_TAX_RATE = 0.08;
+    private static final double BOOK_TAX_RATE = 0.0;
+    private static final double STANDARD_TAX_RATE = 0.18;
+
+    private static final double GOLD_DISCOUNT_RATE = 0.10;
+    private static final double SILVER_DISCOUNT_RATE = 0.05;
+
+    public static class Item {
+        final String name;
+        final double price;
+        final int qty;
+        final String category;
+
+        public Item(String name, double price, int qty, String category) {
+            this.name = name;
+            this.price = price;
+            this.qty = qty;
+            this.category = category;
+        }
+    }
+
+    // Main invoice method
+    public String buildInvoice(String customer, String tier, List<Item> items) {
+
+        StringBuilder sb = new StringBuilder();
+
+        appendInvoiceHeader(sb, customer);
+
+        double subtotal = 0;
+        double tax = 0;
+
+        for (Item item : items) {
+
+            double line = calculateLinePrice(item);
+
+            subtotal += line;
+            tax += calculateTax(line, item.category);
+
+            appendInvoiceItem(sb, item, line);
+        }
+
+        double discount = calculateDiscount(subtotal, tier);
+
+        double total = subtotal - discount + tax;
+
+        appendInvoiceSummary(sb, subtotal, discount, tax, total);
+
+        return sb.toString();
+    }
+
+    // Extracted: Invoice header
+    private void appendInvoiceHeader(StringBuilder sb, String customer) {
+        sb.append("INVOICE for ")
+          .append(normalizeName(customer))
+          .append("\n");
+    }
+
+    // Extracted: Item price calculation
+    private double calculateLinePrice(Item item) {
+
+        double line = item.price * item.qty;
+
+        if (item.qty >= BULK_DISCOUNT_THRESHOLD) {
+            line -= line * BULK_DISCOUNT_RATE;
+        }
+
+        return line;
+    }
+
+    // Extracted: Tax calculation
+    private double calculateTax(double line, String category) {
+
+        double taxRate;
+
+        if (category.equals("FOOD")) {
+            taxRate = FOOD_TAX_RATE;
+        } else if (category.equals("BOOK")) {
+            taxRate = BOOK_TAX_RATE;
+        } else {
+            taxRate = STANDARD_TAX_RATE;
+        }
+
+        return line * taxRate;
+    }
+
+    // Extracted: Customer discount calculation
+    private double calculateDiscount(double subtotal, String tier) {
+
+        double discountRate = 0;
+
+        if (tier.equals("GOLD")) {
+            discountRate = GOLD_DISCOUNT_RATE;
+        } else if (tier.equals("SILVER")) {
+            discountRate = SILVER_DISCOUNT_RATE;
+        }
+
+        return subtotal * discountRate;
+    }
+
+    // Extracted: Invoice item formatting
+    private void appendInvoiceItem(StringBuilder sb, Item item, double line) {
+
+        sb.append(item.name)
+          .append(" x")
+          .append(item.qty)
+          .append(" = ")
+          .append(String.format("%.2f", line))
+          .append("\n");
+    }
+
+    // Extracted: Invoice summary formatting
+    private void appendInvoiceSummary(
+            StringBuilder sb,
+            double subtotal,
+            double discount,
+            double tax,
+            double total) {
+
+        sb.append("Subtotal: ").append(String.format("%.2f", subtotal)).append("\n");
+        sb.append("Discount: ").append(String.format("%.2f", discount)).append("\n");
+        sb.append("Tax: ").append(String.format("%.2f", tax)).append("\n");
+        sb.append("Total: ").append(String.format("%.2f", total)).append("\n");
+    }
+
+    // Shared customer name formatting
+    private String normalizeName(String name) {
+        return name.trim().toUpperCase();
+    }
+
+    // Shipping label
+    public String buildShippingLabel(String customer, String city, String country) {
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("SHIP TO: ")
+          .append(normalizeName(customer))
+          .append("\n");
+
+        sb.append(normalizeName(city))
+          .append(", ")
+          .append(normalizeName(country))
+          .append("\n");
+
+        return sb.toString();
+    }
+
+    // Extract names using Streams
+    public List<String> names(List<Item> items) {
+
+        return items.stream()
+                .map(item -> item.name)
+                .collect(Collectors.toList());
+    }
+}
+
+
+
+3. Before vs. After
+Before	After
+One long buildInvoice() method	Several smaller methods
+Repeated name formatting	Shared normalizeName()
+Unexplained numeric values	Named constants
+Tax mixed with invoice logic	Separate calculateTax()
+Discount mixed with invoice logic	Separate calculateDiscount()
+Manual list population	Stream-based transformation
+
+4. Which refactoring techniques were applied?
+Refactoring technique	Applied to
+Extract Method	buildInvoice()
+Extract Method	Tax calculation
+Extract Method	Discount calculation
+Extract Method	Invoice formatting
+Consolidate Duplicate Code	normalizeName()
+Replace Magic Number with Symbolic Constant	Tax and discount rates
+Replace Loop with Pipeline (optional)	names()
+
+Important: There is another improvement worth considering: replace double with BigDecimal for monetary calculations, because floating-point arithmetic can introduce rounding errors. Also, an enum for category and tier would make the business rules safer.
+
+The goal of refactoring is not necessarily to reduce the number of lines. It is to improve code readability, maintainability, testability, and separation of responsibilities without changing the externally observable behavior.

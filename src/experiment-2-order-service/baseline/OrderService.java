@@ -1,0 +1,63 @@
+package baseline;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/** Deliberately smelly code (long method, duplicated code, magic numbers) used as the refactoring input. */
+public class OrderService {
+
+    public static class Item {
+        final String name; final double price; final int qty; final String category;
+        public Item(String name, double price, int qty, String category) {
+            this.name = name; this.price = price; this.qty = qty; this.category = category;
+        }
+    }
+
+    public String buildInvoice(String customer, String tier, List<Item> items) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("INVOICE for ").append(customer.trim().toUpperCase()).append("\n");
+        double subtotal = 0;
+        double tax = 0;
+        for (Item it : items) {
+            double line = it.price * it.qty;
+            if (it.qty >= 10) {
+                line = line - line * 0.05;
+            }
+            subtotal += line;
+            if (it.category.equals("FOOD")) {
+                tax += line * 0.08;
+            } else if (it.category.equals("BOOK")) {
+                tax += line * 0.0;
+            } else {
+                tax += line * 0.18;
+            }
+            sb.append(it.name).append(" x").append(it.qty).append(" = ")
+              .append(String.format("%.2f", line)).append("\n");
+        }
+        double discount = 0;
+        if (tier.equals("GOLD")) {
+            discount = subtotal * 0.10;
+        } else if (tier.equals("SILVER")) {
+            discount = subtotal * 0.05;
+        }
+        double total = subtotal - discount + tax;
+        sb.append("Subtotal: ").append(String.format("%.2f", subtotal)).append("\n");
+        sb.append("Discount: ").append(String.format("%.2f", discount)).append("\n");
+        sb.append("Tax: ").append(String.format("%.2f", tax)).append("\n");
+        sb.append("Total: ").append(String.format("%.2f", total)).append("\n");
+        return sb.toString();
+    }
+
+    public String buildShippingLabel(String customer, String city, String country) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("SHIP TO: ").append(customer.trim().toUpperCase()).append("\n");
+        sb.append(city.trim().toUpperCase()).append(", ").append(country.trim().toUpperCase()).append("\n");
+        return sb.toString();
+    }
+
+    public List<String> names(List<Item> items) {
+        List<String> r = new ArrayList<>();
+        for (Item it : items) r.add(it.name);
+        return r;
+    }
+}
