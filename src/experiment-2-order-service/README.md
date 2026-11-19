@@ -4,8 +4,8 @@ Inspired by Paper B (Liu et al., *Exploring the potential of general purpose LLM
 Complements Experiment 1 (`OrderProcessor`, simpler class) in this repository.
 
 ## Setup
-- **Input:** `src/OrderService.java` – a deliberately smelly class (long method, duplicated code, magic numbers, tiers and categories).
-- **Safety check 1:** 7 unit tests (`src/OrderServiceTest.java`); each variant has an identical copy that only differs in the class name (`src/OrderService<Model>P<n>Test.java`).
+- **Input:** `baseline/OrderService.java` – a deliberately smelly class (long method, duplicated code, magic numbers, tiers and categories).
+- **Safety check 1:** 7 unit tests (`baseline/OrderServiceTest.java`); each variant folder has an identical copy that only differs in the class name (`variants/<Model>_P<n>/OrderService<Model>P<n>Test.java`).
 - **Safety check 2:** `tools/Driver.java` compares each variant with the baseline on 20,000 random cases (negative prices, quantity 0–15, three categories, three tiers).
 - **LLMs:** GPT-6 and Gemini 3.1 Pro (names as shown by the apps), date: `[dd/mm/yyyy]`.
 - **Prompts:** `prompts/` – P1 generic, P2 type named (Extract Method), P3 scoped to `buildInvoice` and two subcategories. Each run used a new chat.
@@ -26,9 +26,10 @@ Causes (edge cases): `subtotal * 0` gives `-0.0` for a negative subtotal; Gemini
 
 ## Reproduce
 ```bash
+# from this folder (src/experiment-2-order-service)
 bash run_all.sh      # needs JDK 17+ (Linux/macOS/Git Bash)
 ```
-Raw LLM answers are in `answers/`. The code from each answer is in `src/` with the class renamed so that all files compile together (`OrderServiceGeminiP1`, …, `OrderServiceGPTP3`); only the class name was changed. In IntelliJ mark `src` as Sources Root and run any `*Test` class.
+Raw LLM answers are in `answers/`. The code from each answer is in `variants/<Model>_P<n>/` with the class renamed (`OrderServiceGeminiP1`, …, `OrderServiceGPTP3`) so that all files compile together; only the class name (and package) was changed. In IntelliJ mark `src` as Sources Root and run any `*Test` class.
 
 ## Limitations
 One class, one run per prompt, two models, our own expected list, 7 tests. The behaviour differences appear only in edge cases.

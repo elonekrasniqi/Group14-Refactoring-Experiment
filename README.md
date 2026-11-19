@@ -1,22 +1,26 @@
-# Group 14 – LLM-Assisted Refactoring Experiment
+# Group 14 – LLM-Assisted Refactoring Experiments
 
-## Overview
+Practical verification for our case study on refactoring (course: Software Design and Analysis, University of Prishtina).
+The experiments are inspired by Paper B: *Exploring the Potential of General Purpose LLMs in Automated Software Refactoring: An Empirical Study* (Liu et al., ASE 2025).
 
-This repository contains a small Java refactoring experiment conducted as part of our Software Design and Analysis course project.
+Both experiments use the same three prompting strategies:
 
-The experiment is inspired by Paper B: *Exploring the Potential of General Purpose LLMs in Automated Software Refactoring: An Empirical Study*.
+- **P1 – Generic:** general refactoring instructions.
+- **P2 – Extract Method:** instructions naming the refactoring type.
+- **P3 – Scoped:** instructions focused on a specific method / subcategories.
 
-## Experiment
+## Repository structure
 
-We evaluated three prompting strategies:
+| Path | Content |
+|---|---|
+| `src/experiment-1-order-service/` | Experiment 1 – `OrderProcessor` (baseline + P1, P2, P3) |
+| `tests/` | Unit tests of Experiment 1 |
+| `run-tests.sh`, `run-tests.ps1` | Run Experiment 1 (Linux/macOS/Git Bash, Windows PowerShell) |
+| `src/experiment-2-order-service/` | Experiment 2 – `OrderService`, GPT-6 and Gemini 3.1 Pro (own README inside) |
 
-- **P1 – Generic:** General refactoring instructions.
-- **P2 – Extract Method:** Instructions specifying the refactoring type.
-- **P3 – Scoped:** Instructions focused on a specific method.
+## Experiment 1 – OrderProcessor (Elonë Krasniqi)
 
-Five predefined refactoring improvements were evaluated: tax extraction, discount extraction, formatting extraction, duplicate code removal, and magic number replacement.
-
-## Results
+Five predefined improvements: tax extraction, discount extraction, formatting extraction, duplicate code removal, magic number replacement.
 
 | Prompt | Implemented | Compilation | Tests |
 |---|---|---|---|
@@ -24,26 +28,32 @@ Five predefined refactoring improvements were evaluated: tax extraction, discoun
 | P2 – Extract Method | 3/5 | Passed | 7/7 |
 | P3 – Scoped | 3/5 | Passed | 7/7 |
 
-## How to Run
+LLM / version / date: `[to be added]`
 
-Compile each version separately with the same test class.
-
-For example, from the repository root:
-
+Run (from the repository root):
 ```bash
-mkdir out
-javac -d out baseline/OrderProcessor.java tests/OrderProcessorTest.java
-java -cp out OrderProcessorTest
+bash run-tests.sh          # all versions; or: bash run-tests.sh P2
+```
+```powershell
+.\run-tests.ps1            # all versions; or: .\run-tests.ps1 -Version P2
 ```
 
-Repeat for P1, P2, and P3, clearing or recreating the `out` directory before each run.
+## Experiment 2 – OrderService (Ardit Hyseni)
+
+A richer class (tiers, categories, bulk discount) with two LLMs, 7 tests and a 20,000-case differential check.
+Results: P1 found all 5 opportunities but changed behaviour in edge cases (`-0.00`, 1-cent differences, immutable list); P2 and P3 behaved identically to the baseline.
+Details and table: `src/experiment-2-order-service/README.md`.
+
+```bash
+bash src/experiment-2-order-service/run_all.sh
+```
+
+Requires JDK 17+.
 
 ## Limitations
 
-This experiment uses one Java class, one run per prompt, and seven test cases. Passing all tests does not guarantee complete behavioral equivalence.
+One or two classes, one run per prompt, our own expected-opportunity lists. Passing all tests does not guarantee complete behavioural equivalence.
 
 ## Authors
 
-Elonë Krasniqi and Ardit Hyseni
-
-Faculty of Electrical and Computer Engineering, University of Prishtina.
+Elonë Krasniqi and Ardit Hyseni – Faculty of Electrical and Computer Engineering, University of Prishtina.
